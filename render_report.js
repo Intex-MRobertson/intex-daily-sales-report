@@ -329,6 +329,11 @@ ${extra ? `<tr><td colspan="13" style="padding:8px 5px 3px 5px;font-size:6.5pt;f
 
     const buildModel = (data) => {
         if (!data || data.schema !== 'intex-daily-sales/1') throw new Error(`Unexpected schema: ${data && data.schema}`);
+        // Integrity: NetSuite stamps a SHA-256 of the compact JSON (without "checksum"). Any altered value fails here.
+        const { checksum, ...payload } = data;
+        if (!checksum) throw new Error('Data file has no checksum; refusing to format unverified figures.');
+        const actual = require('crypto').createHash('sha256').update(JSON.stringify(payload), 'utf8').digest('hex');
+        if (actual !== String(checksum).toLowerCase()) throw new Error('Data checksum mismatch: the figures differ from what NetSuite sent.');
         const req = (cond, msg) => { if (!cond) throw new Error(msg); };
         req(/^\d{4}-\d{2}-\d{2}$/.test(data.asOf), 'asOf missing or malformed');
         req(data.countries && data.countries.AU && data.countries.NZ, 'countries.AU / countries.NZ missing');
