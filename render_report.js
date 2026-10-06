@@ -4,7 +4,7 @@
  *
  * Reads the JSON data file NetSuite attaches to its daily email (schema intex-daily-sales/1)
  * and writes, into the output folder:
- *   Daily_Sales_Report_YYYY-MM-DD.html   email body (table-based, Outlook-safe)
+ *   Daily_Sales_Report_YYYY-MM-DD.html   email body: the familiar report layout, cleaned up (table-based, Outlook-safe)
  *   Daily_Sales_Report_YYYY-MM-DD.pdf    page 1 charts, then the tables (A4 landscape)
  *   Daily_Sales_Report_YYYY-MM-DD.manifest.json   what was produced; written LAST
  *
@@ -362,6 +362,63 @@ ${extra ? `<tr><td colspan="13" style="padding:8px 5px 3px 5px;font-size:6.5pt;f
         return m;
     };
 
+    // ---------- Email body: the familiar report layout, cleaned up ----------
+    // Same sections and columns as the original NetSuite/Phocas email; the PDF keeps the new design.
+
+    const renderClassicEmail = (m) => {
+        const GREEN = { fg: '#1E6B34', bg: '#E2F2E5', sym: '\u25B2' };
+        const RED = { fg: '#B3261E', bg: '#FBE4E2', sym: '\u25BC' };
+        const F = FONT;
+        const th = `padding:6px 8px;font-size:11px;font-weight:bold;color:${C.ink};text-align:right;vertical-align:bottom;border-bottom:2px solid ${C.ink};line-height:1.25`;
+        const td = `padding:5px 8px;font-size:13px;text-align:right;white-space:nowrap;border-bottom:1px solid ${C.faint}`;
+        const pct = (a, b) => {
+            if (!b) return '';
+            const v = a / b, t = v >= 1 ? GREEN : RED;
+            return `<span style="display:inline-block;min-width:50px;padding:1px 7px;border-radius:9px;background:${t.bg};color:${t.fg};font-weight:bold">${t.sym}&nbsp;${Math.round(v * 100)}%</span>`;
+        };
+        const gap = '<td style="width:14px;padding:0;border:none"></td>';
+        const row = (r, o) => {
+            const opt = o || {};
+            const st = td + (opt.shade ? ';background:#F7F6F2' : ';background:#FFFFFF')
+                + (opt.total ? `;font-weight:bold;border-top:1px solid ${C.ink};border-bottom:3px double ${C.ink}` : '');
+            return `<tr>
+<td style="${st};text-align:left;font-weight:bold">${esc(r.name)}</td>
+<td style="${st}">${fmt(r.salesToday)}</td><td style="${st}">${fmt(r.sales)}</td><td style="${st}">${fmt(r.salesBudgetMtd)}</td>
+<td style="${st}">${pct(r.sales, r.salesBudgetMtd)}</td><td style="${st}">${fmt(r.salesTarget)}</td>${gap}
+<td style="${st}">${fmt(r.gpToday)}</td><td style="${st}">${fmt(r.gp)}</td><td style="${st}">${fmt(r.gpBudgetMtd)}</td>
+<td style="${st}">${pct(r.gp, r.gpBudgetMtd)}</td><td style="${st}">${fmt(r.gpTarget)}</td></tr>`;
+        };
+        const table = (title, label, rows, tot, extra, note) => `
+<tr><td style="padding:22px 0 6px;font-family:${F};font-size:15px;font-weight:bold;color:${C.ink};text-decoration:underline">${esc(title)}</td></tr>
+<tr><td>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:${F}">
+<tr><td style="padding:0"></td>
+<td colspan="5" style="padding:4px 8px;text-align:center;font-size:13px;font-weight:bold;color:${C.ink};border-bottom:1px solid ${C.rule}">Sales</td>${gap}
+<td colspan="5" style="padding:4px 8px;text-align:center;font-size:13px;font-weight:bold;color:${C.ink};border-bottom:1px solid ${C.rule}">Gross Profits</td></tr>
+<tr><td style="${th};text-align:left">${esc(label)}</td>
+<td style="${th}">Today's<br>sales</td><td style="${th}">MTD<br>Sales</td><td style="${th}">Budgeted<br>Sales MTD</td><td style="${th}">% Achieved<br>MTD vs Budget</td><td style="${th}">Monthly<br>Sales Target</td>${gap}
+<td style="${th}">Today's<br>GP</td><td style="${th}">MTD<br>GP</td><td style="${th}">Budgeted<br>GP MTD</td><td style="${th}">% Achieved<br>MTD vs Budget</td><td style="${th}">Monthly<br>GP Target</td></tr>
+${rows.map((r, i) => row(r, { shade: i % 2 === 1 })).join('')}
+${row(tot, { total: true })}
+${extra ? row(extra, { total: true }) : ''}
+</table>
+${note ? `<div style="padding-top:4px;font-family:${F};font-size:11px;color:${RED.fg}">${esc(note)}</div>` : ''}
+</td></tr>`;
+        return `<div style="background:#FFFFFF;padding:16px 0">
+<table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${F};color:${C.ink}">
+<tr><td style="border-bottom:2px solid ${C.ink};padding-bottom:8px;font-family:${F}">
+<span style="font-size:20px;font-weight:bold">Daily Sales Report</span>
+<span style="font-size:14px;color:${C.muted}">&nbsp;&middot;&nbsp;${esc(longDate(m.asOf))}</span></td></tr>
+${table("Australian Daily Sales & GP's x Territory - Group 1", 'Territories', m.AU.rows, m.AU.tot)}
+${table("New Zealand Daily Sales & GP's x Territory - Group 1", 'Territories', m.NZ.rows, m.NZ.tot)}
+${table("Group Daily Sales & GP's x Branch - Group 1", 'Branch', m.BR.rows, Object.assign({}, m.BR.tot, { name: 'AU Total' }), Object.assign({}, m.NZ.tot, { name: 'NZ *' }), '*NZ is in NZD and is not added to the AU total.')}
+<tr><td style="padding-top:16px;font-family:${F};font-size:11px;color:${C.muted}">
+Working days: AU ${m.cal.AU.elapsed} of ${m.cal.AU.total} &middot; NZ ${m.cal.NZ.elapsed} of ${m.cal.NZ.total}. Source: NetSuite invoices and credit memos to ${displayDate(m.asOf)}, product lines only, ex GST. Charts and the detailed layout are in the attached PDF.
+${m.warnings.length ? `<br><br><span style="color:${RED.fg}"><b>Check:</b><br>${m.warnings.map(esc).join('<br>')}</span>` : ''}
+</td></tr>
+</table></div>`;
+    };
+
     // ---------- PDF document (rendered by Chromium) ----------
 
     const pdfCard = (title, sub, svg, caption) => `
@@ -421,7 +478,7 @@ ${pdfCard('GP margin', 'actual (left) vs budgeted (right); marker = budgeted', m
         fs.mkdirSync(outDir, { recursive: true });
         const base = `Daily_Sales_Report_${m.asOf}`;
         const htmlFile = `${base}.html`, pdfFile = `${base}.pdf`, manFile = `${base}.manifest.json`;
-        fs.writeFileSync(path.join(outDir, htmlFile), `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">${renderEmail(m)}</body></html>`);
+        fs.writeFileSync(path.join(outDir, htmlFile), `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">${renderClassicEmail(m)}</body></html>`);
         let status = 'ok', pdfError = null;
         try {
             const { chromium } = require('playwright');
@@ -443,4 +500,4 @@ ${pdfCard('GP margin', 'actual (left) vs budgeted (right); marker = budgeted', m
     };
 
     if (require.main === module) main();
-    module.exports = { buildModel, renderEmail, renderPdfHtml };
+    module.exports = { buildModel, renderEmail, renderClassicEmail, renderPdfHtml };
