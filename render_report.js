@@ -42,7 +42,7 @@ const total = (rows, name) => {
 
     const tierOf = (a, b) => {
         const pctv = b ? a / b : 0;
-        return { pct: pctv, t: pctv >= 1 ? TIERS.good : pctv >= 0.95 ? TIERS.watch : TIERS.bad };
+        return { pct: pctv, t: pctv >= 1 ? TIERS.good : TIERS.bad }; // two colours: green at/above budget, red below
     };
     const fmt = (n) => {
         const v = Math.round(Number(n) || 0);
@@ -142,7 +142,7 @@ ${!m.only || m.only.includes('NZ') ? table(m.NZ.title, 'NZD', 'Territory', m.NZ.
 ${!m.only || m.only.includes('BR') ? table('By branch', '', 'Branch', m.BR.rows.concat([Object.assign({}, m.NZ.tot, { name: 'NZ' })]), total(m.BR.rows.concat([m.NZ.tot]), 'Total')) : ''}
 <tr><td style="padding-top:18px;border-bottom:1px solid ${C.rule}"></td></tr>
 <tr><td style="padding-top:12px;font-size:12px;color:${C.muted};font-family:${FONT}">
-${legend(TIERS.good, 'on or above budget')}${legend(TIERS.watch, 'within 5%')}${legend(TIERS.bad, 'more than 5% under')}<br><br>
+${legend(TIERS.good, 'on or above budget')}${legend(TIERS.bad, 'below budget')}<br><br>
 Source: NetSuite invoices and credit memos to ${displayDate(m.asOf)}, product lines only, ex GST. ${m.noTiles ? '' : 'Charts are in the attached PDF.'}
 ${m.warnings.length ? `<br><br><span style="color:${TIERS.bad.fg}"><b>Check:</b><br>${m.warnings.map(esc).join('<br>')}</span>` : ''}
 </td></tr>
