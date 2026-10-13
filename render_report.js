@@ -32,9 +32,9 @@ const total = (rows, name) => {
         navy: '#1F3A5F', band: '#E6E2D8', track: '#F1EFE9', shade: '#FAF9F6'
     };
     const TIERS = {
-        good: { fg: '#1D5F8C', bg: '#E1EDF6', sym: '\u25B2' },
+        good: { fg: '#1E6B34', bg: '#E2F2E5', sym: '\u25B2' },
         watch: { fg: '#7A5000', bg: '#FAEDD2', sym: '\u25CF' },
-        bad: { fg: '#A63A0C', bg: '#FBE2D5', sym: '\u25BC' }
+        bad: { fg: '#B3261E', bg: '#FBE4E2', sym: '\u25BC' }
     };
     const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
@@ -67,7 +67,7 @@ const total = (rows, name) => {
         const pill = (a, b) => {
             if (!b) return '';
             const { pct, t } = tierOf(a, b);
-            return `<span style="display:inline-block;min-width:52px;padding:2px 8px;border-radius:10px;background:${t.bg};color:${t.fg};font-weight:bold;text-align:center">${t.sym}&nbsp;${Math.round(pct * 100)}%</span>`;
+            return `<span style="display:inline-block;min-width:52px;padding:2px 8px;border-radius:10px;background:${t.bg};color:${t.fg};font-weight:bold;text-align:center">${Math.round(pct * 100)}%</span>`;
         };
         const varCell = (a, b) => `color:${tierOf(a, b).t.fg}`;
 
@@ -111,7 +111,7 @@ ${extra ? `<tr><td colspan="13" style="padding:14px 9px 6px;font-size:11px;font-
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid ${C.rule};font-family:${FONT}">
 <tr><td style="padding:14px 16px 4px;font-size:11px;font-weight:bold;letter-spacing:0.04em;text-transform:uppercase;color:${C.muted}">${esc(label)} &middot; ${cur}</td></tr>
 <tr><td style="padding:2px 16px;white-space:nowrap"><span style="font-family:Georgia,serif;font-size:26px;font-weight:bold;color:${C.ink}">${fmt(a)}</span>&nbsp;
-<span style="padding:2px 8px;border-radius:10px;background:${t.bg};color:${t.fg};font-weight:bold;font-size:13px">${t.sym}&nbsp;${Math.round(pct * 100)}%</span></td></tr>
+<span style="padding:2px 8px;border-radius:10px;background:${t.bg};color:${t.fg};font-weight:bold;font-size:13px">${Math.round(pct * 100)}%</span></td></tr>
 <tr><td style="padding:8px 16px 6px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
 ${w > 0 ? `<td width="${w}%" height="6" style="background:${t.fg};font-size:0;line-height:0">&nbsp;</td>` : ''}${w < 100 ? `<td height="6" style="background:${C.band};font-size:0;line-height:0">&nbsp;</td>` : ''}
 </tr></table></td></tr>
@@ -121,7 +121,7 @@ ${w > 0 ? `<td width="${w}%" height="6" style="background:${t.fg};font-size:0;li
 
         const au = m.AU.tot, nz = m.NZ.tot;
         const monthEnd = m.cal.AU.elapsed === m.cal.AU.total;
-        const legend = (t, txt) => `<span style="padding:2px 8px;border-radius:10px;background:${t.bg};color:${t.fg};font-weight:bold">${t.sym}</span>&nbsp;${txt}&nbsp;&nbsp;&nbsp;`;
+        const legend = (t, txt) => `<span style="padding:2px 8px;border-radius:10px;background:${t.bg};color:${t.fg};font-weight:bold">&nbsp;&nbsp;&nbsp;</span>&nbsp;${txt}&nbsp;&nbsp;&nbsp;`;
 
         return `<div style="background:${m.noTiles ? '#FFFFFF' : C.ground};padding:${m.noTiles ? '0' : '24px 0'}">
 <table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${FONT};color:${C.ink}">
@@ -139,7 +139,7 @@ ${tile('NZ Gross profit', 'NZD', nz.gp, nz.gpBudgetMtd, nz.gpTarget, `margin ${m
 </tr></table></td></tr>`}
 ${!m.only || m.only.includes('AU') ? table(m.AU.title, 'AUD', 'Territory', m.AU.rows, m.AU.tot) : ''}
 ${!m.only || m.only.includes('NZ') ? table(m.NZ.title, 'NZD', 'Territory', m.NZ.rows, m.NZ.tot) : ''}
-${!m.only || m.only.includes('BR') ? table(m.BR.title, 'AU branches in AUD \u00B7 AU OTHER not in a branch', 'Branch', m.BR.rows, m.BR.tot, Object.assign({}, m.NZ.tot, { name: 'NZ' })) : ''}
+${!m.only || m.only.includes('BR') ? table('By branch', '', 'Branch', m.BR.rows.concat([Object.assign({}, m.NZ.tot, { name: 'NZ' })]), total(m.BR.rows.concat([m.NZ.tot]), 'Total')) : ''}
 <tr><td style="padding-top:18px;border-bottom:1px solid ${C.rule}"></td></tr>
 <tr><td style="padding-top:12px;font-size:12px;color:${C.muted};font-family:${FONT}">
 ${legend(TIERS.good, 'on or above budget')}${legend(TIERS.watch, 'within 5%')}${legend(TIERS.bad, 'more than 5% under')}<br><br>
@@ -230,7 +230,7 @@ ${extra ? `<tr><td colspan="13" style="padding:8px 5px 3px 5px;font-size:6.5pt;f
             s += tx(CW, cy + 3, r.salesBudgetMtd ? `${Math.round(pct * 100)}%` : '', { anchor: 'end', bold: true, fill: t.fg });
         });
         const ly = CH - 6;
-        s += `<rect x="${L}" y="${ly - 6}" width="12" height="6" fill="${C.navy}"/>` + tx(L + 16, ly, 'MTD sales', { size: 7, fill: C.muted });
+        s += `<rect x="${L}" y="${ly - 6}" width="12" height="6" fill="${C.muted}"/>` + tx(L + 16, ly, 'MTD sales', { size: 7, fill: C.muted });
         s += `<rect x="${L + 70}" y="${ly - 8}" width="1.5" height="10" fill="${C.ink}"/>` + tx(L + 76, ly, 'Budget MTD', { size: 7, fill: C.muted });
         s += `<rect x="${L + 136}" y="${ly - 7}" width="12" height="8" fill="${C.band}"/>` + tx(L + 152, ly, 'Month target', { size: 7, fill: C.muted });
         return s + '</svg>';
@@ -300,10 +300,16 @@ ${extra ? `<tr><td colspan="13" style="padding:8px 5px 3px 5px;font-size:6.5pt;f
             if (d) s += tx(X(i), CH - 5, `${Number(d.slice(8, 10))} ${MONTHS[Number(d.slice(5, 7)) - 1]}`, { anchor: i === n ? 'end' : i === 1 ? 'start' : 'middle', size: 7, fill: C.muted });
         });
         s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(n).toFixed(1)}" y2="${Y(pace.target).toFixed(1)}" stroke="${C.ink}" stroke-width="1" stroke-dasharray="4 3"/>`;
-        const pts = [[X(0), Y(0)]].concat(pace.points.map((p) => [X(p.i), Y(p.cum)]));
-        s += `<polyline points="${pts.map((q) => `${q[0].toFixed(1)},${q[1].toFixed(1)}`).join(' ')}" fill="none" stroke="${C.navy}" stroke-width="2"/>`;
-        s += `<circle cx="${X(last.i).toFixed(1)}" cy="${Y(last.cum).toFixed(1)}" r="3" fill="${C.navy}"/>`;
-        s += tx(X(last.i) - 5, Y(last.cum) + 13, `${(last.cum / 1e6).toFixed(2)}M`, { anchor: 'end', bold: true, fill: C.navy });
+        // Each stretch of the line is green while at/above budget pace, red while below it.
+        const P = [{ i: 0, cum: 0 }].concat(pace.points);
+        const due = (i) => pace.target * i / n;
+        for (let k = 1; k < P.length; k++) {
+            const c = P[k].cum >= due(P[k].i) ? TIERS.good.fg : TIERS.bad.fg;
+            s += `<line x1="${X(P[k - 1].i).toFixed(1)}" y1="${Y(P[k - 1].cum).toFixed(1)}" x2="${X(P[k].i).toFixed(1)}" y2="${Y(P[k].cum).toFixed(1)}" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/>`;
+        }
+        const lineC = last.cum >= due(last.i) ? TIERS.good.fg : TIERS.bad.fg;
+        s += `<circle cx="${X(last.i).toFixed(1)}" cy="${Y(last.cum).toFixed(1)}" r="3" fill="${lineC}"/>`;
+        s += tx(X(last.i) - 5, Y(last.cum) + 13, `${(last.cum / 1e6).toFixed(2)}M`, { anchor: 'end', bold: true, fill: lineC });
         s += tx(X(n) - 4, Y(pace.target) - 6, `Target ${(pace.target / 1e6).toFixed(2)}M`, { anchor: 'end', bold: true });
         return s + '</svg>';
     };
@@ -421,12 +427,15 @@ ${m.warnings.length ? `<br><br><span style="color:${RED.fg}"><b>Check:</b><br>${
 
     // ---------- PDF document (rendered by Chromium) ----------
 
+    const NZ_LABELS = { DISTRIBUTION: 'NZ Dist.', COMMERCIAL: 'NZ Comm.', OTHER: 'NZ Other' };
+
     const pdfCard = (title, sub, svg, caption) => `
 <div class="card"><div class="card-h"><span class="card-t">${esc(title)}</span> <span class="card-s">${esc(sub)}</span></div>
 <div class="chart">${svg}</div>${caption ? `<div class="cap">${esc(caption)}</div>` : ''}</div>`;
 
     const renderPdfHtml = (m) => {
-        const au = m.AU.tot;
+        const au = m.AU.tot, nz = m.NZ.tot;
+        const chartRows = m.AU.rows.map((r) => (r.name === 'OTHER' ? Object.assign({}, r, { name: 'AU Other' }) : r)).concat(m.NZ.rows.map((r) => Object.assign({}, r, { name: NZ_LABELS[r.name] || ('NZ ' + r.name) })));
         const pctSpan = (a, b) => `<span style="color:${tierOf(a, b).t.fg}">${pctText(a, b)}</span>`;
         return `<!doctype html><html><head><meta charset="utf-8"><style>
 @page { size: A4 landscape; margin: 11mm 12mm; }
@@ -436,9 +445,9 @@ body { margin: 0; font-family: ${FONT}; color: ${C.ink}; background: #FFFFFF; -w
 .head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid ${C.ink}; padding-bottom: 8px; }
 .kick { font-size: 11px; font-weight: bold; letter-spacing: .08em; text-transform: uppercase; color: ${C.navy}; }
 h1 { margin: 2px 0 0; font-family: Georgia, serif; font-size: 24px; }
-.kpis { display: flex; gap: 22px; text-align: right; }
+.kpis { display: flex; gap: 18px; text-align: right; }
 .kpis .l { font-size: 10px; color: ${C.muted}; text-transform: uppercase; letter-spacing: .04em; }
-.kpis .v { font-size: 17px; font-weight: bold; font-variant-numeric: tabular-nums; }
+.kpis .v { font-size: 15px; font-weight: bold; font-variant-numeric: tabular-nums; }
 .grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; min-height: 0; }
 .card { background: #fff; border: 1px solid ${C.rule}; box-shadow: none; border-radius: 8px; padding: 9px 12px; display: flex; flex-direction: column; min-height: 0; }
 .card-t { font-family: Georgia, serif; font-size: 15px; font-weight: bold; }
@@ -451,15 +460,16 @@ h1 { margin: 2px 0 0; font-family: Georgia, serif; font-size: 24px; }
 .tables table table { break-inside: avoid; }
 </style></head><body>
 <section class="page1">
-<div class="head"><div><div class="kick">Intex &middot; Daily Sales Report</div><h1>Australia at a glance &middot; ${esc(longDate(m.asOf))}</h1></div>
-<div class="kpis"><div><div class="l">Sales MTD</div><div class="v">${fmt(au.sales)} ${pctSpan(au.sales, au.salesBudgetMtd)}</div></div>
-<div><div class="l">GP MTD</div><div class="v">${fmt(au.gp)} ${pctSpan(au.gp, au.gpBudgetMtd)}</div></div>
-<div><div class="l">GP margin</div><div class="v">${margin(au.gp, au.sales)}</div></div></div></div>
+<div class="head"><div><div class="kick">Intex &middot; Daily Sales Report</div><h1>Intex at a glance &middot; ${esc(longDate(m.asOf))}</h1></div>
+<div class="kpis"><div><div class="l">AU Sales MTD</div><div class="v">${fmt(au.sales)} ${pctSpan(au.sales, au.salesBudgetMtd)}</div></div>
+<div><div class="l">AU GP MTD</div><div class="v">${fmt(au.gp)} ${pctSpan(au.gp, au.gpBudgetMtd)}</div></div>
+<div><div class="l">NZ Sales MTD</div><div class="v">${fmt(nz.sales)} ${pctSpan(nz.sales, nz.salesBudgetMtd)}</div></div>
+<div><div class="l">NZ GP MTD</div><div class="v">${fmt(nz.gp)} ${pctSpan(nz.gp, nz.gpBudgetMtd)}</div></div></div></div>
 <div class="grid">
-${pdfCard('Sales vs budget', 'by territory, AUD', bulletChart(m.AU.rows), '')}
+${pdfCard('Sales vs budget', 'by territory · AU in AUD, NZ in NZD', bulletChart(chartRows), '')}
 ${pdfCard('Month pace', 'cumulative AU sales vs target', paceChart(m.pace), paceCaption(m.pace))}
-${pdfCard('Where the gap is', 'sales variance to budget MTD, AUD', varianceChart(m.AU.rows), '')}
-${pdfCard('GP margin', 'actual (left) vs budgeted (right); marker = budgeted', marginChart(m.AU.rows), '')}
+${pdfCard('Where the gap is', 'sales variance to budget MTD · AU in AUD, NZ in NZD', varianceChart(chartRows), '')}
+${pdfCard('GP margin', 'actual (left) vs budgeted (right); marker = budgeted', marginChart(chartRows), '')}
 </div>
 <div class="foot">Working days AU ${m.cal.AU.elapsed}/${m.cal.AU.total} &middot; NZ ${m.cal.NZ.elapsed}/${m.cal.NZ.total}. Tables follow. Source: NetSuite invoices and credit memos, product lines only, ex GST.</div>
 </section>
