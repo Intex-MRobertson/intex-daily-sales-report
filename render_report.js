@@ -5,7 +5,7 @@
  * Reads the JSON data file NetSuite attaches to its daily email (schema intex-daily-sales/1)
  * and writes, into the output folder:
  *   Daily_Sales_Report_YYYY-MM-DD.html   email body: the familiar report layout, cleaned up (table-based, Outlook-safe)
- *   Daily_Sales_Report_YYYY-MM-DD.pdf    page 1 charts, then the tables (A4 landscape)
+ *   Daily_Sales_Report_YYYY-MM-DD.pdf    tables (pages 1-2), then the charts (page 3), A4 landscape
  *   Daily_Sales_Report_YYYY-MM-DD.manifest.json   what was produced; written LAST
  *
  * Usage:  node render_report.js <data.json> <outDir>
@@ -457,9 +457,13 @@ h1 { margin: 2px 0 0; font-family: Georgia, serif; font-size: 24px; }
 .cap { font-size: 10px; color: ${C.muted}; }
 .foot { font-size: 10px; color: ${C.muted}; }
 .tables { break-before: page; zoom: 0.88; }
+.tables.first { break-before: auto; }
+.charts { break-before: page; }
 .tables table table { break-inside: avoid; }
 </style></head><body>
-<section class="page1">
+<section class="tables first">${renderEmail(Object.assign({}, m, { noTiles: true, only: ['AU'] }))}</section>
+<section class="tables">${renderEmail(Object.assign({}, m, { noTiles: true, only: ['NZ', 'BR'] }))}</section>
+<section class="page1 charts">
 <div class="head"><div><div class="kick">Intex &middot; Daily Sales Report</div><h1>Intex at a glance &middot; ${esc(longDate(m.asOf))}</h1></div>
 <div class="kpis"><div><div class="l">AU Sales MTD</div><div class="v">${fmt(au.sales)} ${pctSpan(au.sales, au.salesBudgetMtd)}</div></div>
 <div><div class="l">AU GP MTD</div><div class="v">${fmt(au.gp)} ${pctSpan(au.gp, au.gpBudgetMtd)}</div></div>
@@ -471,10 +475,8 @@ ${pdfCard('Month pace', 'cumulative AU sales vs target', paceChart(m.pace), pace
 ${pdfCard('Where the gap is', 'sales variance to budget MTD · AU in AUD, NZ in NZD', varianceChart(chartRows), '')}
 ${pdfCard('GP margin', 'actual (left) vs budgeted (right); marker = budgeted', marginChart(chartRows), '')}
 </div>
-<div class="foot">Working days AU ${m.cal.AU.elapsed}/${m.cal.AU.total} &middot; NZ ${m.cal.NZ.elapsed}/${m.cal.NZ.total}. Tables follow. Source: NetSuite invoices and credit memos, product lines only, ex GST.</div>
+<div class="foot">Working days AU ${m.cal.AU.elapsed}/${m.cal.AU.total} &middot; NZ ${m.cal.NZ.elapsed}/${m.cal.NZ.total}. Tables on pages 1–2. Source: NetSuite invoices and credit memos, product lines only, ex GST.</div>
 </section>
-<section class="tables">${renderEmail(Object.assign({}, m, { noTiles: true, only: ['AU'] }))}</section>
-<section class="tables">${renderEmail(Object.assign({}, m, { noTiles: true, only: ['NZ', 'BR'] }))}</section>
 </body></html>`;
     };
 
