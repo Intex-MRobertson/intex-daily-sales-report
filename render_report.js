@@ -62,8 +62,8 @@ const total = (rows, name) => {
     // ---------- Email (table-based, inline styles) ----------
 
     const renderEmail = (m) => {
-        const td = `padding:6px 9px;text-align:right;border-bottom:1px solid ${C.faint};white-space:nowrap;font-size:13px`;
-        const th = `padding:7px 9px;text-align:right;font-size:11px;font-weight:bold;letter-spacing:0.04em;text-transform:uppercase;color:${C.muted};border-bottom:1px solid ${C.ink};vertical-align:bottom`;
+        const td = `padding:6px 7px;text-align:right;border-bottom:1px solid ${C.faint};white-space:nowrap;font-size:13px`;
+        const th = `padding:7px 7px;text-align:right;font-size:11px;font-weight:bold;letter-spacing:0.04em;text-transform:uppercase;color:${C.muted};border-bottom:1px solid ${C.ink};vertical-align:bottom`;
         const pill = (a, b) => {
             if (!b) return '';
             const { pct, t } = tierOf(a, b);
@@ -81,12 +81,14 @@ const total = (rows, name) => {
 <td style="${base};color:${C.muted}">${fmt(r.salesBudgetMtd)}</td>
 <td style="${base};${varCell(r.sales, r.salesBudgetMtd)}">${fmtVar(r.sales - r.salesBudgetMtd)}</td>
 <td style="${base}">${pill(r.sales, r.salesBudgetMtd)}</td>
+<td style="${base};color:${C.muted}">${fmt(r.salesTarget)}</td>
 <td style="padding:0;width:12px"></td>
 <td style="${base};color:${C.muted}">${fmt(r.gpToday)}</td>
 <td style="${base};color:${C.ink}">${fmt(r.gp)}</td>
 <td style="${base};color:${C.muted}">${fmt(r.gpBudgetMtd)}</td>
 <td style="${base};${varCell(r.gp, r.gpBudgetMtd)}">${fmtVar(r.gp - r.gpBudgetMtd)}</td>
 <td style="${base}">${pill(r.gp, r.gpBudgetMtd)}</td>
+<td style="${base};color:${C.muted}">${fmt(r.gpTarget)}</td>
 <td style="${base};color:${C.ink}">${margin(r.gp, r.sales)}</td>
 </tr>`;
         };
@@ -97,11 +99,11 @@ const total = (rows, name) => {
 <span style="font-size:13px;color:${C.muted}">&nbsp;&nbsp;${esc(sub)}</span></td></tr>
 <tr><td>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#FFFFFF;font-family:${FONT}">
-<tr><th style="${th};text-align:left"></th><th colspan="5" style="${th};text-align:left;color:${C.ink};border-bottom:1px solid ${C.rule}">Sales</th><th style="padding:0"></th><th colspan="6" style="${th};text-align:left;color:${C.ink};border-bottom:1px solid ${C.rule}">Gross profit</th></tr>
-<tr><th style="${th};text-align:left">${esc(label)}</th><th style="${th}">Today</th><th style="${th}">MTD</th><th style="${th}">Budget MTD</th><th style="${th}">Variance</th><th style="${th}">vs budget</th><th style="padding:0"></th><th style="${th}">Today</th><th style="${th}">MTD</th><th style="${th}">Budget MTD</th><th style="${th}">Variance</th><th style="${th}">vs budget</th><th style="${th}">Margin</th></tr>
+<tr><th style="${th};text-align:left"></th><th colspan="6" style="${th};text-align:left;color:${C.ink};border-bottom:1px solid ${C.rule}">Sales</th><th style="padding:0"></th><th colspan="7" style="${th};text-align:left;color:${C.ink};border-bottom:1px solid ${C.rule}">Gross profit</th></tr>
+<tr><th style="${th};text-align:left">${esc(label)}</th><th style="${th}">Today</th><th style="${th}">MTD</th><th style="${th}">Budget MTD</th><th style="${th}">Variance</th><th style="${th}">vs budget</th><th style="${th}">Month target</th><th style="padding:0"></th><th style="${th}">Today</th><th style="${th}">MTD</th><th style="${th}">Budget MTD</th><th style="${th}">Variance</th><th style="${th}">vs budget</th><th style="${th}">Month target</th><th style="${th}">Margin</th></tr>
 ${rows.map((r, i) => row(r, { shade: i % 2 === 1 })).join('')}
 ${row(tot, { bold: true })}
-${extra ? `<tr><td colspan="13" style="padding:14px 9px 6px;font-size:11px;font-weight:bold;letter-spacing:0.04em;text-transform:uppercase;color:${C.muted}">New Zealand &middot; NZD, shown separately</td></tr>${row(extra, { bold: true })}` : ''}
+${extra ? `<tr><td colspan="15" style="padding:14px 9px 6px;font-size:11px;font-weight:bold;letter-spacing:0.04em;text-transform:uppercase;color:${C.muted}">New Zealand &middot; NZD, shown separately</td></tr>${row(extra, { bold: true })}` : ''}
 </table></td></tr>`;
 
         const tile = (label, cur, a, b, target, foot) => {
