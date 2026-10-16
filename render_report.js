@@ -129,7 +129,7 @@ ${w > 0 ? `<td width="${w}%" height="6" style="background:${t.fg};font-size:0;li
 <table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${FONT};color:${C.ink}">
 <tr><td style="border-bottom:2px solid ${C.ink};padding-bottom:12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-<td style="font-family:${FONT}"><div style="font-size:12px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:${C.navy}">Daily Sales Report</div>
+<td style="font-family:${FONT}"><div style="font-size:12px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:${C.navy}">GROUP 1 - DAILY SALES REPORT</div>
 <div style="font-family:Georgia,serif;font-size:28px;font-weight:bold;color:${C.ink}">${longDate(m.asOf)}</div></td>
 <td align="right" valign="bottom" style="font-family:${FONT};font-size:13px;color:${C.muted}">Working days: AU ${m.cal.AU.elapsed} of ${m.cal.AU.total} &middot; NZ ${m.cal.NZ.elapsed} of ${m.cal.NZ.total}${monthEnd ? '<br>Month-end: budget MTD equals the monthly target' : ''}</td>
 </tr></table></td></tr>
@@ -539,7 +539,7 @@ ${pdfCard('GP margin', 'actual (left) vs budgeted (right); marker = budgeted', m
             `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">${renderReportEmail(m, chartUri)}</body></html>`);
         const manifest = {
             schema: 'intex-daily-sales-output/2', asOf: m.asOf, status,
-            subject: `Daily Sales Report - ${displayDate(m.asOf)}`,
+            subject: `GROUP 1 - DAILY SALES REPORT - ${displayDate(m.asOf)}`,
             htmlFile, pdfFile: null,
             warnings: m.warnings, chartError, generatedAt: new Date().toISOString()
         };
