@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 /**
- * Intex Daily Sales Report - formatter.
+ * Daily Sales Report - formatter.
  *
  * Reads the JSON data file NetSuite attaches to its daily email (schema intex-daily-sales/1)
  * and writes, into the output folder:
- *   Daily_Sales_Report_YYYY-MM-DD.html   email body: the familiar report layout, cleaned up (table-based, Outlook-safe)
- *   Daily_Sales_Report_YYYY-MM-DD.pdf    tables (pages 1-2), then the charts (page 3), A4 landscape
+ *   Daily_Sales_Report_YYYY-MM-DD.html            the email body: AU, NZ and By branch tables, the
+ *                                                 month pace chart (embedded PNG) and a HIGHLY CONFIDENTIAL footer
  *   Daily_Sales_Report_YYYY-MM-DD.manifest.json   what was produced; written LAST
+ * No PDF is produced.
  *
  * Usage:  node render_report.js <data.json> <outDir>
  * Needs:  Node 18+, and the "playwright" package with Chromium for the PDF
  *         (npm install playwright && npx playwright install chromium).
- * Exit codes: 0 ok; 1 bad input; 2 PDF step failed (HTML is still written, manifest says status "no_pdf").
+ * Exit codes: 0 ok; 1 bad input; 2 chart picture failed (HTML still written without it, status "no_chart").
  *
  * The numbers are taken from the JSON as-is; this script only formats them.
  */
@@ -89,7 +90,6 @@ const total = (rows, name) => {
 <td style="${base};${varCell(r.gp, r.gpBudgetMtd)}">${fmtVar(r.gp - r.gpBudgetMtd)}</td>
 <td style="${base}">${pill(r.gp, r.gpBudgetMtd)}</td>
 <td style="${base};color:${C.muted}">${fmt(r.gpTarget)}</td>
-<td style="${base};color:${C.ink}">${margin(r.gp, r.sales)}</td>
 </tr>`;
         };
 
@@ -99,11 +99,11 @@ const total = (rows, name) => {
 <span style="font-size:13px;color:${C.muted}">&nbsp;&nbsp;${esc(sub)}</span></td></tr>
 <tr><td>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#FFFFFF;font-family:${FONT}">
-<tr><th style="${th};text-align:left"></th><th colspan="6" style="${th};text-align:left;color:${C.ink};border-bottom:1px solid ${C.rule}">Sales</th><th style="padding:0"></th><th colspan="7" style="${th};text-align:left;color:${C.ink};border-bottom:1px solid ${C.rule}">Gross profit</th></tr>
-<tr><th style="${th};text-align:left">${esc(label)}</th><th style="${th}">Today</th><th style="${th}">MTD</th><th style="${th}">Budget MTD</th><th style="${th}">Variance</th><th style="${th}">vs budget</th><th style="${th}">Month target</th><th style="padding:0"></th><th style="${th}">Today</th><th style="${th}">MTD</th><th style="${th}">Budget MTD</th><th style="${th}">Variance</th><th style="${th}">vs budget</th><th style="${th}">Month target</th><th style="${th}">Margin</th></tr>
+<tr><th style="${th};text-align:left"></th><th colspan="6" style="${th};text-align:left;color:${C.ink};border-bottom:1px solid ${C.rule}">Sales</th><th style="padding:0"></th><th colspan="6" style="${th};text-align:left;color:${C.ink};border-bottom:1px solid ${C.rule}">Gross profit</th></tr>
+<tr><th style="${th};text-align:left">${esc(label)}</th><th style="${th}">Today</th><th style="${th}">MTD</th><th style="${th}">Budget MTD</th><th style="${th}">Variance</th><th style="${th}">vs budget</th><th style="${th}">Month target</th><th style="padding:0"></th><th style="${th}">Today</th><th style="${th}">MTD</th><th style="${th}">Budget MTD</th><th style="${th}">Variance</th><th style="${th}">vs budget</th><th style="${th}">Month target</th></tr>
 ${rows.map((r, i) => row(r, { shade: i % 2 === 1 })).join('')}
 ${row(tot, { bold: true })}
-${extra ? `<tr><td colspan="15" style="padding:14px 9px 6px;font-size:11px;font-weight:bold;letter-spacing:0.04em;text-transform:uppercase;color:${C.muted}">New Zealand &middot; NZD, shown separately</td></tr>${row(extra, { bold: true })}` : ''}
+${extra ? `<tr><td colspan="14" style="padding:14px 9px 6px;font-size:11px;font-weight:bold;letter-spacing:0.04em;text-transform:uppercase;color:${C.muted}">New Zealand &middot; NZD, shown separately</td></tr>${row(extra, { bold: true })}` : ''}
 </table></td></tr>`;
 
         const tile = (label, cur, a, b, target, foot) => {
@@ -129,7 +129,7 @@ ${w > 0 ? `<td width="${w}%" height="6" style="background:${t.fg};font-size:0;li
 <table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${FONT};color:${C.ink}">
 <tr><td style="border-bottom:2px solid ${C.ink};padding-bottom:12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-<td style="font-family:${FONT}"><div style="font-size:12px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:${C.navy}">Intex &middot; Daily Sales Report</div>
+<td style="font-family:${FONT}"><div style="font-size:12px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:${C.navy}">Daily Sales Report</div>
 <div style="font-family:Georgia,serif;font-size:28px;font-weight:bold;color:${C.ink}">${longDate(m.asOf)}</div></td>
 <td align="right" valign="bottom" style="font-family:${FONT};font-size:13px;color:${C.muted}">Working days: AU ${m.cal.AU.elapsed} of ${m.cal.AU.total} &middot; NZ ${m.cal.NZ.elapsed} of ${m.cal.NZ.total}${monthEnd ? '<br>Month-end: budget MTD equals the monthly target' : ''}</td>
 </tr></table></td></tr>
@@ -145,7 +145,7 @@ ${!m.only || m.only.includes('BR') ? table('By branch', '', 'Branch', m.BR.rows.
 <tr><td style="padding-top:18px;border-bottom:1px solid ${C.rule}"></td></tr>
 <tr><td style="padding-top:12px;font-size:12px;color:${C.muted};font-family:${FONT}">
 ${legend(TIERS.good, 'on or above budget')}${legend(TIERS.bad, 'below budget')}<br><br>
-Source: NetSuite invoices and credit memos to ${displayDate(m.asOf)}, product lines only, ex GST. ${m.noTiles ? '' : 'Charts are in the attached PDF.'}
+Source: NetSuite invoices and credit memos to ${displayDate(m.asOf)}, product lines only, ex GST.
 ${m.warnings.length ? `<br><br><span style="color:${TIERS.bad.fg}"><b>Check:</b><br>${m.warnings.map(esc).join('<br>')}</span>` : ''}
 </td></tr>
 </table></div>`;
@@ -427,6 +427,42 @@ ${m.warnings.length ? `<br><br><span style="color:${RED.fg}"><b>Check:</b><br>${
 </table></div>`;
     };
 
+    // ---------- Report email (v4): tables + month pace picture, no PDF ----------
+    // The pace chart is embedded as a PNG data URI (email programs cannot show SVG).
+
+    const renderReportEmail = (m, chartUri) => {
+        const F = FONT;
+        const tables = renderEmail(Object.assign({}, m, { noTiles: true, warnings: [] }));
+        const chart = `
+<table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${F};color:${C.ink}">
+<tr><td style="padding:26px 0 8px">
+<span style="font-family:Georgia,serif;font-size:19px;font-weight:bold;color:${C.ink}">Month pace</span>
+<span style="font-size:13px;color:${C.muted}">&nbsp;&nbsp;cumulative AU sales vs target</span></td></tr>
+<tr><td>${chartUri
+        ? `<img src="${chartUri}" width="720" height="380" alt="Month pace chart: cumulative AU sales against the monthly target" style="display:block;width:720px;max-width:100%;height:auto;border:1px solid ${C.rule}">`
+        : `<div style="font-size:13px;color:${C.muted}">(Chart unavailable today.)</div>`}</td></tr>
+<tr><td style="padding-top:6px;font-size:12px;color:${C.muted}">${esc(paceCaption(m.pace))}</td></tr>
+</table>`;
+        const warn = m.warnings.length ? `
+<table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${F}">
+<tr><td style="padding-top:18px;font-size:12px;color:${TIERS.bad.fg}"><b>Check:</b><br>${m.warnings.map(esc).join('<br>')}</td></tr></table>` : '';
+        const footer = `
+<table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${F}">
+<tr><td align="center" style="padding:28px 0 10px;font-size:12px;font-weight:bold;letter-spacing:0.1em;color:${C.ink}">HIGHLY CONFIDENTIAL</td></tr></table>`;
+        return `<div style="background:#FFFFFF;padding:8px 0">${tables}${chart}${warn}${footer}</div>`;
+    };
+
+    const renderChartPng = async (m) => {
+        const { chromium } = require('playwright');
+        const browser = await chromium.launch();
+        try {
+            const page = await browser.newPage({ viewport: { width: 720, height: 380 }, deviceScaleFactor: 2 });
+            await page.setContent(`<!doctype html><html><body style="margin:0;background:#FFFFFF">
+<div id="c" style="width:720px;height:380px">${paceChart(m.pace).replace('<svg ', '<svg style="width:720px;height:380px" ')}</div></body></html>`, { waitUntil: 'load' });
+            return await page.locator('#c').screenshot({ type: 'png' });
+        } finally { await browser.close(); }
+    };
+
     // ---------- PDF document (rendered by Chromium) ----------
 
     const NZ_LABELS = { DISTRIBUTION: 'NZ Dist.', COMMERCIAL: 'NZ Comm.', OTHER: 'NZ Other' };
@@ -440,10 +476,11 @@ ${m.warnings.length ? `<br><br><span style="color:${RED.fg}"><b>Check:</b><br>${
         const chartRows = m.AU.rows.map((r) => (r.name === 'OTHER' ? Object.assign({}, r, { name: 'AU Other' }) : r)).concat(m.NZ.rows.map((r) => Object.assign({}, r, { name: NZ_LABELS[r.name] || ('NZ ' + r.name) })));
         const pctSpan = (a, b) => `<span style="color:${tierOf(a, b).t.fg}">${pctText(a, b)}</span>`;
         return `<!doctype html><html><head><meta charset="utf-8"><style>
-@page { size: A4 landscape; margin: 11mm 12mm; }
+@page { size: A4 landscape; margin: 11mm 12mm 13mm 12mm; }
+.wm { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-28deg); white-space: nowrap; font-family: Helvetica, Arial, sans-serif; font-size: 30px; font-weight: bold; letter-spacing: 0.08em; color: rgba(27, 27, 25, 0.07); z-index: 1000; pointer-events: none; }
 * { box-sizing: border-box; }
 body { margin: 0; font-family: ${FONT}; color: ${C.ink}; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.page1 { height: 186mm; display: flex; flex-direction: column; gap: 10px; }
+.page1 { height: 184mm; display: flex; flex-direction: column; gap: 10px; }
 .head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid ${C.ink}; padding-bottom: 8px; }
 .kick { font-size: 11px; font-weight: bold; letter-spacing: .08em; text-transform: uppercase; color: ${C.navy}; }
 h1 { margin: 2px 0 0; font-family: Georgia, serif; font-size: 24px; }
@@ -463,7 +500,8 @@ h1 { margin: 2px 0 0; font-family: Georgia, serif; font-size: 24px; }
 .charts { break-before: page; }
 .tables table table { break-inside: avoid; }
 </style></head><body>
-<section class="tables first">${renderEmail(Object.assign({}, m, { noTiles: true, only: ['AU'] }))}</section>
+<div class="wm">HIGHLY CONFIDENTIAL &middot; INTEX INTERNAL &middot; ${displayDate(m.asOf)}</div>
+<section class="tables first">${renderEmail(Object.assign({}, m, { noTiles: true, only: ['AU'], warnings: [] }))}</section>
 <section class="tables">${renderEmail(Object.assign({}, m, { noTiles: true, only: ['NZ', 'BR'] }))}</section>
 <section class="page1 charts">
 <div class="head"><div><div class="kick">Intex &middot; Daily Sales Report</div><h1>Intex at a glance &middot; ${esc(longDate(m.asOf))}</h1></div>
@@ -491,22 +529,19 @@ ${pdfCard('GP margin', 'actual (left) vs budgeted (right); marker = budgeted', m
         try { m = buildModel(JSON.parse(fs.readFileSync(inFile, 'utf8'))); } catch (e) { console.error('Bad input: ' + e.message); process.exit(1); }
         fs.mkdirSync(outDir, { recursive: true });
         const base = `Daily_Sales_Report_${m.asOf}`;
-        const htmlFile = `${base}.html`, pdfFile = `${base}.pdf`, manFile = `${base}.manifest.json`;
-        fs.writeFileSync(path.join(outDir, htmlFile), `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">${renderClassicEmail(m)}</body></html>`);
-        let status = 'ok', pdfError = null;
+        const htmlFile = `${base}.html`, manFile = `${base}.manifest.json`;
+        let status = 'ok', chartError = null, chartUri = null;
         try {
-            const { chromium } = require('playwright');
-            const browser = await chromium.launch();
-            const page = await browser.newPage();
-            await page.setContent(renderPdfHtml(m), { waitUntil: 'load' });
-            await page.pdf({ path: path.join(outDir, pdfFile), format: 'A4', landscape: true, printBackground: true, preferCSSPageSize: true });
-            await browser.close();
-        } catch (e) { status = 'no_pdf'; pdfError = e.message; }
+            const png = await renderChartPng(m);
+            chartUri = `data:image/png;base64,${png.toString('base64')}`;
+        } catch (e) { status = 'no_chart'; chartError = e.message; }
+        fs.writeFileSync(path.join(outDir, htmlFile),
+            `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">${renderReportEmail(m, chartUri)}</body></html>`);
         const manifest = {
-            schema: 'intex-daily-sales-output/1', asOf: m.asOf, status,
+            schema: 'intex-daily-sales-output/2', asOf: m.asOf, status,
             subject: `Daily Sales Report - ${displayDate(m.asOf)}`,
-            htmlFile, pdfFile: status === 'ok' ? pdfFile : null,
-            warnings: m.warnings, pdfError, generatedAt: new Date().toISOString()
+            htmlFile, pdfFile: null,
+            warnings: m.warnings, chartError, generatedAt: new Date().toISOString()
         };
         fs.writeFileSync(path.join(outDir, manFile), JSON.stringify(manifest, null, 1));
         console.log(JSON.stringify(manifest));
@@ -514,4 +549,4 @@ ${pdfCard('GP margin', 'actual (left) vs budgeted (right); marker = budgeted', m
     };
 
     if (require.main === module) main();
-    module.exports = { buildModel, renderEmail, renderClassicEmail, renderPdfHtml };
+    module.exports = { buildModel, renderEmail, renderClassicEmail, renderPdfHtml, renderReportEmail };
