@@ -449,7 +449,10 @@ ${m.warnings.length ? `<br><br><span style="color:${RED.fg}"><b>Check:</b><br>${
         const footer = `
 <table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${F}">
 <tr><td align="center" style="padding:28px 0 10px;font-size:12px;font-weight:bold;letter-spacing:0.1em;color:${C.ink}">HIGHLY CONFIDENTIAL</td></tr></table>`;
-        return `<div style="background:#FFFFFF;padding:8px 0">${tables}${chart}${warn}${footer}</div>`;
+        const topMark = `
+<table role="presentation" width="1040" cellpadding="0" cellspacing="0" align="center" style="font-family:${F}">
+<tr><td align="center" style="padding:6px 0 14px;font-size:12px;font-weight:bold;letter-spacing:0.1em;color:${C.ink}">HIGHLY CONFIDENTIAL</td></tr></table>`;
+        return `<div style="background:#FFFFFF;padding:8px 0">${topMark}${tables}${chart}${warn}${footer}</div>`;
     };
 
     const renderChartPng = async (m) => {
